@@ -377,7 +377,7 @@ export function ChatApp() {
 
   return (
     <div className="h-dvh overflow-hidden bg-[#f6f1e8] text-stone-900">
-      <div className="mx-auto flex h-full max-w-6xl">
+      <div className="flex h-full w-full">
         <aside className="hidden h-full w-72 shrink-0 flex-col border-r border-stone-200/80 bg-[#efe8dc] p-4 md:flex">
           <div className="mb-4 flex shrink-0 items-center justify-between gap-2">
             <h1 className="font-[family-name:var(--font-display)] text-xl tracking-tight text-teal-900">
@@ -583,7 +583,7 @@ export function ChatApp() {
             onSubmit={onSubmit}
             className="shrink-0 border-t border-stone-200/80 bg-[#f6f1e8] px-4 py-4 md:px-8"
           >
-            <div className="mx-auto max-w-3xl rounded-2xl border border-stone-300 bg-white p-2 shadow-sm focus-within:ring-2 focus-within:ring-teal-700/30">
+            <div className="mx-auto w-full max-w-4xl rounded-2xl border border-stone-300 bg-white p-2 shadow-sm focus-within:ring-2 focus-within:ring-teal-700/30">
               {pendingFile ? (
                 <div className="mb-2 flex items-center gap-2 rounded-xl bg-stone-50 px-3 py-2 text-sm text-stone-700">
                   <span className="truncate font-medium">{pendingFile.name}</span>
@@ -648,7 +648,7 @@ export function ChatApp() {
                 </button>
               </div>
             </div>
-            <p className="mx-auto mt-2 max-w-3xl text-center text-xs text-stone-500">
+            <p className="mx-auto mt-2 w-full max-w-4xl text-center text-xs text-stone-500">
               Attach from the composer · PDF / TXT / Markdown · max 8MB
             </p>
           </form>
@@ -753,7 +753,7 @@ function MessageBubble({ message }: { message: UIMessage }) {
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
       <div
-        className={`max-w-2xl rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+        className={`max-w-3xl rounded-2xl px-4 py-3 text-sm leading-relaxed ${
           isUser
             ? "bg-teal-800 text-white"
             : "border border-stone-200 bg-white text-stone-800 shadow-sm"
