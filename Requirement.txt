@@ -1,0 +1,40 @@
+Hi Arcade,
+
+Thanks for applying for the Full-Stack Developer role at Kleo. I’d like to invite you to the first technical stage.
+
+TAKE-HOME TASK: BUILD A SMALL DOCUMENT-CHAT APPLICATION
+
+Requirements
+
+- TypeScript and Next.js App Router //
+- Vercel AI SDK //
+- Deploy on Vercel using the free Hobby plan
+- Neon Postgres using the free plan and pgvector //
+- Let the user upload a PDF, TXT or Markdown file from inside the conversation //
+- Store the document metadata, extracted content/chunks, embeddings, chats and messages in Neon so the conversation survives a reload //
+- Let the user ask questions about the uploaded document, with streamed responses grounded in its content
+- Show citations for factual answers, including the filename, page or section where possible, and the relevant excerpt
+- Render at least one meaningful structured UI component inside the chat using AI tool calling or structured output. This could be expandable evidence cards, a comparison table, a timeline or a checklist. Choose what you think is most useful.
+- Include sensible loading, empty and error states
+
+Scope
+
+- No authentication, billing or admin area is required
+- You may use any model provider supported by the Vercel AI SDK
+- No paid services are required
+- AI coding tools are encouraged and expected
+
+Timebox and submission
+
+- Spend no more than five hours. Prioritise carefully and document anything unfinished.
+- Submit within 72 hours of receiving this message.
+- Send the live Vercel URL, GitHub repository link, and a README covering setup, architecture/database schema, key trade-offs, time spent, AI tools used, and one example where you corrected or rejected AI-generated output.
+
+We’ll assess functionality and reliability, retrieval and citation quality, TypeScript and architecture, UX/product judgement, and the clarity of your decisions.
+
+If you pass, the next stage will be a short live coding session using this codebase, followed by a final face-to-face conversation.
+
+Please reply to confirm you’ve received this and can complete it within the window.
+
+Kind regards,
+Cameron

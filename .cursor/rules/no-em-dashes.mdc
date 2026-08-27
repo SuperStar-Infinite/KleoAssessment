@@ -1,0 +1,20 @@
+---
+description: Prefer hyphens over em/en dashes in all project writing
+alwaysApply: true
+---
+
+# No em dashes or en dashes
+
+Do not use em dashes (`—`) or en dashes (`–`) in UI copy, comments, README, commits, or generated text.
+
+Use a regular hyphen-minus (`-`) instead.
+
+```text
+❌ Kleo Docs — Document Chat
+✅ Kleo Docs - Document Chat
+
+❌ Persist in the background — don't block
+✅ Persist in the background - don't block
+```
+
+When editing existing files, replace any `—` / `–` with `-`.
