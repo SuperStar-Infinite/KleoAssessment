@@ -1,21 +1,32 @@
 # Kleo Docs - Document Chat
 
-Take-home: upload a PDF/TXT/Markdown file and ask grounded questions with streamed answers, citations, and expandable evidence cards.
+Take-home: upload a PDF/TXT/Markdown file from the chat composer and ask grounded questions with streamed answers, citations, and expandable evidence cards. Conversations persist in Neon across reloads.
 
 ## Stack
 
-- **Next.js App Router** + TypeScript
+- **Next.js App Router** + TypeScript + Tailwind
 - **Vercel AI SDK** (`ai`, `@ai-sdk/openai`, `@ai-sdk/react`)
 - **Neon Postgres** + **pgvector**
 - **Drizzle ORM**
-- **OpenAI** (`gpt-4o-mini` + `text-embedding-3-small`) - swap models via env
+- **OpenAI** (`gpt-4o-mini` + `text-embedding-3-small`) - swap chat model via env
+- **unpdf** for PDF text extraction (page-aware)
+
+## Features
+
+- Attach PDF / TXT / Markdown from the composer (ChatGPT/Claude-style paperclip)
+- Uploaded files appear as chips inside the chat message history
+- Streamed RAG answers with `[n]` citations + expandable evidence cards
+- Multi-chat sidebar: create, switch (cached), delete sessions
+- Independent scroll for sidebar vs message panel
+- Fast path for greetings/small talk (skips embedding + vector search)
+- Loading / empty / error states for boot, upload, and chat
 
 ## Setup
 
 ### 1. Neon
 
 1. Create a free project at [neon.tech](https://neon.tech)
-2. Enable the `vector` extension and create tables by running [`scripts/schema.sql`](scripts/schema.sql) in the Neon SQL Editor
+2. Run [`scripts/schema.sql`](scripts/schema.sql) in the Neon SQL Editor (enables `vector` + creates tables)
 3. Copy the connection string
 
 ### 2. Environment
@@ -23,8 +34,6 @@ Take-home: upload a PDF/TXT/Markdown file and ask grounded questions with stream
 ```bash
 cp .env.example .env.local
 ```
-
-Fill in:
 
 ```env
 DATABASE_URL=postgresql://...
@@ -43,27 +52,25 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ### 4. Deploy (Vercel)
 
-1. Push this repo to GitHub
-2. Import the project in Vercel (Hobby)
-3. Add the same env vars
-4. Deploy
+1. Import this GitHub repo in Vercel (Hobby)
+2. Add the same env vars (`DATABASE_URL`, `OPENAI_API_KEY`, optional `OPENAI_CHAT_MODEL`)
+3. Deploy
 
 ## Architecture
 
 ```
-Upload (PDF/TXT/MD)
+Upload (PDF/TXT/MD) from composer
   -> extract text (unpdf / utf8)
   -> chunk (~1200 chars, overlap)
   -> embed (text-embedding-3-small)
   -> store documents + chunks + embeddings in Neon
+  -> show file chip on that user message in chat history
 
 Ask question
   -> if greeting / small talk: skip embeddings + retrieval (fast path)
-  -> else: embed query -> cosine search (pgvector) -> grounded answer
-  -> citations in prose + evidence cards from retrieved chunks
+  -> else: embed query -> cosine search (pgvector) -> stream grounded answer
+  -> citations in prose + evidence cards built from retrieved chunks
   -> persist user/assistant messages in Neon
-
-Upload happens from the chat composer (paperclip), not a separate header action.
 ```
 
 ### Schema (summary)
@@ -73,34 +80,37 @@ Upload happens from the chat composer (paperclip), not a separate header action.
 | `chats` | Conversation threads |
 | `documents` | Uploaded file metadata + processing status |
 | `chunks` | Text chunks + `vector(1536)` embeddings |
-| `messages` | UI message parts (text + tool results) as JSONB |
+| `messages` | UI message parts as JSONB (`id` is TEXT for AI SDK ids) |
 
 ## Key trade-offs
 
-1. **Inline document processing** (no queue) - simpler for Hobby/demo; large PDFs will block the upload request. Cap is 8MB.
-2. **Chat-scoped retrieval only** - embeddings are filtered by `chat_id`, so documents never leak across chats.
-3. **Evidence cards from retrieval** - built server-side from pgvector hits (no extra LLM tool round-trip), which keeps citation UI without doubling answer latency.
-4. **OpenAI embeddings dimension 1536** - matches `text-embedding-3-small`; changing embedding models requires a schema/migration change.
+1. **Inline document processing** (no queue) - simpler for Hobby/demo; large PDFs block the upload request. Cap is **8MB**.
+2. **Chat-scoped retrieval** - embeddings filtered by `chat_id`, so documents do not leak across chats.
+3. **Evidence cards from retrieval** - built server-side from pgvector hits (no extra LLM tool round-trip) for lower latency while keeping structured citation UI.
+4. **OpenAI embedding dim 1536** - matches `text-embedding-3-small`; changing embedding models needs a schema change.
 5. **No auth** - as specified; anyone with the URL can use the deployed instance.
-6. **Latency path** - greetings skip RAG; document answers use one model call + parallel embed/search; user message persistence is non-blocking.
+6. **Latency** - greetings skip RAG; document answers use one model call + parallel embed/search; user message persistence is non-blocking.
+7. **Client chat cache** - switching chats feels instant for visited sessions; delete cascades documents/chunks/messages in Neon.
 
 ## Time spent
 
-~4.5 hours (scaffolding, Neon/pgvector path, RAG + citations, evidence-card UI, README).
+~5 hours (scaffolding, Neon/pgvector, RAG + citations, composer upload UX, chat nav/delete, latency pass, README).
 
 ## AI tools used
 
 - Cursor Agent (Composer) for scaffolding, implementation, and debugging
-- Vercel AI SDK docs / cookbook patterns for `streamText`, tools, and `useChat`
+- Vercel AI SDK docs / cookbook patterns for streaming chat UI
 
 ## Example: corrected / rejected AI output
 
-Cursor initially suggested using `pdf-parse` with a deep `pdf-parse/lib/pdf-parse.js` import for Next.js. That package is brittle under App Router (test-file side effects / CJS edge cases), so I **rejected** that approach and switched to **`unpdf`**, which extracts per-page text cleanly and fits the citation "page N" requirement better.
+Cursor initially suggested using `pdf-parse` with a deep `pdf-parse/lib/pdf-parse.js` import for Next.js. That package is brittle under App Router (test-file side effects / CJS edge cases), so that approach was **rejected** in favor of **`unpdf`**, which extracts per-page text cleanly and better supports citation "page N".
 
 ## Manual test checklist
 
-- [ ] Create chat, upload `.md` / `.txt`, status becomes `ready`
-- [ ] Upload `.pdf`, ask a factual question, see streamed answer + `[n]` citations
-- [ ] Expand evidence cards (filename / page / excerpt)
+- [ ] New chat; attach `.md` / `.txt` from composer; file chip appears in message history; status becomes `ready`
+- [ ] Upload `.pdf`, ask a factual question; streamed answer + `[n]` citations + evidence cards
+- [ ] Say `hi` - reply is fast (no retrieval delay)
+- [ ] Switch between chats smoothly; delete a chat; confirm it disappears after reload
+- [ ] Sidebar scroll and message scroll are independent
 - [ ] Reload page - chat history and documents still present
-- [ ] Empty state before upload; error state if env/DB missing; upload error for bad file type
+- [ ] Empty / error states when env/DB missing or unsupported file type
